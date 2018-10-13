@@ -9,54 +9,67 @@ class MarketTiming extends Component {
     this.state = {
       tickerInput: '',
       tickerSubmitEnabled: false,
-      activelyTyping: false,
+      // activelyTyping: false,
       typingTimeout: 0,
       tickerSuggestions: [],
+
+      // set on submit
+      selectedTickerSymbol: '',
+      tickerHistoricalDates: [],
+      tickerHistoricalPrices: []
     }
   }
 
   handleTickerChange = e => {
+    const suggestionDelay = 5000;
     const { value } = e.target;
-    if (this.state.typingTimeout) {
-      clearTimeout(this.state.typingTimeout)
-    }
+    if (this.state.typingTimeout) clearTimeout(this.state.typingTimeout)
     this.setState({
       tickerInput: value,
       tickerSubmitEnabled: value,
-      activelyTyping: false,
-      typingTimeout: setTimeout(() => this.getTickerSuggestions(), 2000)
+      // activelyTyping: false,
+      typingTimeout: setTimeout(() => this.getTickerSuggestions(), suggestionDelay)
     })
   }
 
   getTickerSuggestions = () => {
-    axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
-      console.log(result)
-      this.setState({
-        tickerSuggestions: result.data.bestMatches
-      }, () => {
-        this.forceUpdate()
-        console.log('force update hit')
+    if (this.state.tickerInput.length) {
+      axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
+        this.setState({
+          tickerSuggestions: result.data.bestMatches
+        })
       })
-    })
+    }
   }
 
   handleTickerSubmit = (e) => {
     e.preventDefault();
-    console.log('also hit')
+    axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
+      let tickerInfo = result.data['Meta Data'];
+      let priceData = result.data['Weekly Time Series'];
+      this.setState({
+        tickerInput: '',
+        selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
+        tickerHistoricalDates: Object.keys(priceData).reverse(),
+        tickerHistoricalPrices: Object.values(priceData).reverse(),
+      })
+    })
   }
 
   render() {
-    console.log(this.state.tickerSuggestions)
-    let activeTickerSuggestions = this.state.tickerSuggestions.length && this.state.tickerSuggestions
+    let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ? this.state.tickerSuggestions
       .map((e, i) => {
-        return <p 
-        key={i}
+        return <p
+          key={i}
         >{`${e['1. symbol']}:  ${e['2. name']}, Type: ${e['3. type']}`}</p>
-      })
-    console.log(activeTickerSuggestions);
+      }) : null
     return (
       <div>
-        <Chart />
+        <Chart
+          priceData={this.state.tickerHistoricalPrices}
+          dateData={this.state.tickerHistoricalDates}
+          ticker={this.state.selectedTickerSymbol} 
+          priceDataLength={this.state.tickerHistoricalDates.length}/>
         <div>
           <div>
             <p>Alright hero, pick your poison.</p>
