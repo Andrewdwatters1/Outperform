@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import Chart from './Chart';
 import SPChart from './SPChart';
+import CalculateReturns from './CalculateReturns';
 import { sp500data } from '../assets/sp500data';
 
 class MarketTiming extends Component {
@@ -19,13 +20,18 @@ class MarketTiming extends Component {
       tickerHistoricalDates: [],
       tickerHistoricalPrices: [],
       shouldSP500Display: true,
-      intervalBetweenIterations: 50, // play around with it
+      intervalBetweenIterations: 300, // play around with it
       totalPricePoints: 120,
       pricePointsPerScreen: 15,
       // chart data, set on submit
       selectedTickerSymbol: '',
       tickerDatesUpdated: [],
-      tickerPricesUpdated: []
+      tickerPricesUpdated: [],
+      // buys/sells
+      tradeAction: 'BUY',
+      buys: [],
+      sells: [],
+      shouldReturnComponentDisplay: false
     }
   }
 
@@ -70,7 +76,7 @@ class MarketTiming extends Component {
 
   updateChartData = () => {
     let { tickerHistoricalDates, tickerHistoricalPrices, totalPricePoints, pricePointsPerScreen } = this.state;
-    let randomStart = Math.floor(Math.random() * (tickerHistoricalPrices.length - totalPricePoints + 1) + totalPricePoints);
+    let randomStart = Math.floor(Math.random() * ((tickerHistoricalPrices.length - totalPricePoints) + 1));
     let count = 0;
     let chartUpdating = setInterval(() => {
       if (count < 120) {
@@ -82,13 +88,31 @@ class MarketTiming extends Component {
       } else if (count === 120) {
         this.setState({
           tickerPricesUpdated: tickerHistoricalPrices.slice(randomStart, randomStart + totalPricePoints).map((e) => e = e['4. close']),
-          tickerDatesUpdated: tickerHistoricalDates.slice(randomStart, randomStart + totalPricePoints)
+          tickerDatesUpdated: tickerHistoricalDates.slice(randomStart, randomStart + totalPricePoints),
+          shouldReturnComponentDisplay: true
         })
         clearInterval(chartUpdating)
       }
     }, this.state.intervalBetweenIterations)
   }
 
+  trade = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (this.state.tradeAction === 'BUY') {
+      this.setState({
+        buys: [...this.state.buys, this.state.tickerPricesUpdated.pop()],
+        tradeAction: 'SELL'
+      })
+    } else {
+      this.setState({
+        sells: [...this.state.sells, this.state.tickerPricesUpdated.pop()],
+        tradeAction: 'BUY'
+      })
+    }
+    console.log('buys are', this.state.buys)
+    console.log('sells are', this.state.sells)
+  }
   render() {
     let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ? this.state.tickerSuggestions
       .map((e, i) => {
@@ -110,6 +134,13 @@ class MarketTiming extends Component {
             dateData={this.state.tickerDatesUpdated}
             ticker={this.state.selectedTickerSymbol}
             priceDataLength={this.state.tickerHistoricalDates.length} />
+        }
+        {this.state.shouldReturnComponentDisplay &&
+          <CalculateReturns
+            buys={this.state.buys}
+            sells={this.state.sells}
+            firstPrice={this.state.tickerHistoricalPrices[0]['4. close']}
+            lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']} />
         }
         <div>
           <div>
@@ -144,6 +175,7 @@ class MarketTiming extends Component {
             </div>
             <button type="submit">$ $ $</button>
           </form>
+          <button onClick={this.trade}>{this.state.tradeAction}</button>
         </div>
       </div>
     )

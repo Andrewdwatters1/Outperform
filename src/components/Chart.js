@@ -24,7 +24,13 @@ export default function Chart(props) {
   };
   return (
     <div>
-      <LineChart data={data} options={chartOptions} width={window.innerWidth * .75} height={window.innerHeight * .5} redraw={false} />
+      <LineChart
+        data={data}
+        options={chartOptions}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        redraw={false}
+        className="stock-line-chart" />
     </div>
   )
 }

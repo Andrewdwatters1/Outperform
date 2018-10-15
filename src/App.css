@@ -49,3 +49,8 @@ table {
 
 
 /*  */
+.spy-line-chart {
+  background-color: red;
+  /* width: 60% !important; */
+  /* height: 40% !important; */
+}

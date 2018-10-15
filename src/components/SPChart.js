@@ -24,7 +24,13 @@ export default function SPChart(props) {
   };
   return (
     <div>
-      <LineChart data={data} options={chartOptions} width={window.innerWidth * .75} height={window.innerHeight * .5} redraw={false} />
+      <LineChart
+        data={data}
+        options={chartOptions}
+        width="600px"
+        height="400px"
+        redraw={false}
+        className="spy-line-chart" />
     </div>
   )
 }
