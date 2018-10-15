@@ -2,32 +2,40 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import Chart from './Chart';
+import SPChart from './SPChart';
+import { sp500data } from '../assets/sp500data';
 
 class MarketTiming extends Component {
   constructor() {
     super()
     this.state = {
+      // input and suggestions
       tickerInput: '',
       tickerSubmitEnabled: false,
-      // activelyTyping: false,
       typingTimeout: 0,
+      suggestionDelay: 10000, // CHANGE IN PRODUCTION
       tickerSuggestions: [],
-
-      // set on submit
-      selectedTickerSymbol: '',
+      // chart data
       tickerHistoricalDates: [],
-      tickerHistoricalPrices: []
+      tickerHistoricalPrices: [],
+      shouldSP500Display: true,
+      intervalBetweenIterations: 50, // play around with it
+      totalPricePoints: 120,
+      pricePointsPerScreen: 15,
+      // chart data, set on submit
+      selectedTickerSymbol: '',
+      tickerDatesUpdated: [],
+      tickerPricesUpdated: []
     }
   }
 
   handleTickerChange = e => {
-    const suggestionDelay = 5000;
+    const { suggestionDelay } = this.state;
     const { value } = e.target;
     if (this.state.typingTimeout) clearTimeout(this.state.typingTimeout)
     this.setState({
       tickerInput: value,
       tickerSubmitEnabled: value,
-      // activelyTyping: false,
       typingTimeout: setTimeout(() => this.getTickerSuggestions(), suggestionDelay)
     })
   }
@@ -45,6 +53,7 @@ class MarketTiming extends Component {
   handleTickerSubmit = (e) => {
     e.preventDefault();
     axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
+      console.log(result)
       let tickerInfo = result.data['Meta Data'];
       let priceData = result.data['Weekly Time Series'];
       this.setState({
@@ -52,8 +61,32 @@ class MarketTiming extends Component {
         selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
         tickerHistoricalDates: Object.keys(priceData).reverse(),
         tickerHistoricalPrices: Object.values(priceData).reverse(),
+        shouldSP500Display: false,
+      }, () => {
+        this.updateChartData()
       })
     })
+  }
+
+  updateChartData = () => {
+    let { tickerHistoricalDates, tickerHistoricalPrices, totalPricePoints, pricePointsPerScreen } = this.state;
+    let randomStart = Math.floor(Math.random() * (tickerHistoricalPrices.length - totalPricePoints + 1) + totalPricePoints);
+    let count = 0;
+    let chartUpdating = setInterval(() => {
+      if (count < 120) {
+        count++;
+        this.setState({
+          tickerPricesUpdated: tickerHistoricalPrices.slice((randomStart + count), (randomStart + pricePointsPerScreen + count)).map((e) => e = e['4. close']),
+          tickerDatesUpdated: tickerHistoricalDates.slice((randomStart + count), (randomStart + pricePointsPerScreen + count))
+        })
+      } else if (count === 120) {
+        this.setState({
+          tickerPricesUpdated: tickerHistoricalPrices.slice(randomStart, randomStart + totalPricePoints).map((e) => e = e['4. close']),
+          tickerDatesUpdated: tickerHistoricalDates.slice(randomStart, randomStart + totalPricePoints)
+        })
+        clearInterval(chartUpdating)
+      }
+    }, this.state.intervalBetweenIterations)
   }
 
   render() {
@@ -65,11 +98,19 @@ class MarketTiming extends Component {
       }) : null
     return (
       <div>
-        <Chart
-          priceData={this.state.tickerHistoricalPrices}
-          dateData={this.state.tickerHistoricalDates}
-          ticker={this.state.selectedTickerSymbol} 
-          priceDataLength={this.state.tickerHistoricalDates.length}/>
+        {this.state.shouldSP500Display ?
+          <SPChart
+            priceData={Object.values(sp500data['Weekly Time Series']).reverse().map((e) => e = e['4. close'])}
+            dateData={Object.keys(sp500data['Weekly Time Series']).reverse()}
+            ticker={this.state.selectedTickerSymbol}
+            priceDataLength={this.state.tickerHistoricalDates.length} />
+          :
+          <Chart
+            priceData={this.state.tickerPricesUpdated}
+            dateData={this.state.tickerDatesUpdated}
+            ticker={this.state.selectedTickerSymbol}
+            priceDataLength={this.state.tickerHistoricalDates.length} />
+        }
         <div>
           <div>
             <p>Alright hero, pick your poison.</p>

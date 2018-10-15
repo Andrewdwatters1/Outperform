@@ -2,13 +2,13 @@ import React from 'react';
 import { Line as LineChart } from 'react-chartjs';
 
 
-export default function Chart(props) {
-  let { ticker, priceData } = props;
+export default function SPChart(props) {
+  let { ticker, priceData, dateData } = props;
   const chartOptions = { //
     showScale: false
   }
   const data = {
-    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    labels: dateData,
     datasets: [
       {
         label: `Historical prices: ${ticker}`,
