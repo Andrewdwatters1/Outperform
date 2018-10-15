@@ -20,7 +20,7 @@ class MarketTiming extends Component {
       tickerHistoricalDates: [],
       tickerHistoricalPrices: [],
       shouldSP500Display: true,
-      intervalBetweenIterations: 300, // play around with it
+      intervalBetweenIterations: 50, // play around with it
       totalPricePoints: 120,
       pricePointsPerScreen: 15,
       // chart data, set on submit
@@ -58,20 +58,22 @@ class MarketTiming extends Component {
 
   handleTickerSubmit = (e) => {
     e.preventDefault();
-    axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
-      console.log(result)
-      let tickerInfo = result.data['Meta Data'];
-      let priceData = result.data['Weekly Time Series'];
-      this.setState({
-        tickerInput: '',
-        selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
-        tickerHistoricalDates: Object.keys(priceData).reverse(),
-        tickerHistoricalPrices: Object.values(priceData).reverse(),
-        shouldSP500Display: false,
-      }, () => {
-        this.updateChartData()
+    if (!this.state.shouldReturnComponentDisplay) {
+      axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
+        console.log(result)
+        let tickerInfo = result.data['Meta Data'];
+        let priceData = result.data['Weekly Time Series'];
+        this.setState({
+          tickerInput: '',
+          selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
+          tickerHistoricalDates: Object.keys(priceData).reverse(),
+          tickerHistoricalPrices: Object.values(priceData).reverse(),
+          shouldSP500Display: false,
+        }, () => {
+          this.updateChartData()
+        })
       })
-    })
+    }
   }
 
   updateChartData = () => {
@@ -113,6 +115,24 @@ class MarketTiming extends Component {
     console.log('buys are', this.state.buys)
     console.log('sells are', this.state.sells)
   }
+  tryAgain = () => {
+    this.setState({
+            tickerInput: '',
+            tickerSubmitEnabled: false,
+            tickerHistoricalDates: [],
+            tickerHistoricalPrices: [],
+            shouldSP500Display: true,
+            selectedTickerSymbol: '',
+            tickerDatesUpdated: [],
+            tickerPricesUpdated: [],
+            tradeAction: 'BUY',
+            buys: [],
+            sells: [],
+            shouldReturnComponentDisplay: false
+    }, () => {
+      this.forceUpdate()
+    })
+  }
   render() {
     let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ? this.state.tickerSuggestions
       .map((e, i) => {
@@ -140,7 +160,10 @@ class MarketTiming extends Component {
             buys={this.state.buys}
             sells={this.state.sells}
             firstPrice={this.state.tickerHistoricalPrices[0]['4. close']}
-            lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']} />
+            firstDate={this.state.tickerHistoricalDates[0]}
+            lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']}
+            lastDate={this.state.tickerHistoricalDates[this.state.tickerHistoricalDates.length - 1]} 
+            tryAgain={this.tryAgain}/>
         }
         <div>
           <div>
