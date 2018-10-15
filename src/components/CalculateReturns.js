@@ -30,7 +30,6 @@ export default class CalculateReturns extends Component {
         investorValueChangeAsBase *= (lastPrice / buys[i])
       }
     }
-    console.log('investor total return', investorValueChangeAsBase);
     let investorCAGR = (Math.pow(investorValueChangeAsBase, logOfYearsAsExp) - 1) * 100;
     returns.push(investorCAGR);
     return returns;
@@ -41,8 +40,6 @@ export default class CalculateReturns extends Component {
     let market = bothReturns[0].toFixed(2);
     let investor = bothReturns[1].toFixed(2);
     let response = bothReturns[0] > bothReturns[1] ? 'Yikes... That was not awesome.' : "Okay seriously, what Fund do you run?";
-    console.log('both', bothReturns)
-    // console.log('inv', investor)
     return (
       <div>
         <p>Market Return: {`${market}%`}</p>

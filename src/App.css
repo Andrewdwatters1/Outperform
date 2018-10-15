@@ -51,6 +51,10 @@ table {
 /*  */
 .spy-line-chart {
   background-color: red;
-  /* width: 60% !important; */
-  /* height: 40% !important; */
+  width: 60% !important; 
+  /* This will set a fixed width to the chart,  the content will not necessarily fit in the container */
+}
+.stock-line-chart {
+  background-color: blue;
+  width: 60% !important;
 }

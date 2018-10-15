@@ -6,6 +6,8 @@ import SPChart from './SPChart';
 import CalculateReturns from './CalculateReturns';
 import { sp500data } from '../assets/sp500data';
 
+const loading = require('../assets/loading.svg');
+
 class MarketTiming extends Component {
   constructor() {
     super()
@@ -31,7 +33,8 @@ class MarketTiming extends Component {
       tradeAction: 'BUY',
       buys: [],
       sells: [],
-      shouldReturnComponentDisplay: false
+      shouldReturnComponentDisplay: false,
+      hasChartSequenceCompleted: false
     }
   }
 
@@ -60,7 +63,6 @@ class MarketTiming extends Component {
     e.preventDefault();
     if (!this.state.shouldReturnComponentDisplay) {
       axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
-        console.log(result)
         let tickerInfo = result.data['Meta Data'];
         let priceData = result.data['Weekly Time Series'];
         this.setState({
@@ -88,12 +90,13 @@ class MarketTiming extends Component {
           tickerDatesUpdated: tickerHistoricalDates.slice((randomStart + count), (randomStart + pricePointsPerScreen + count))
         })
       } else if (count === 120) {
+        clearInterval(chartUpdating)
         this.setState({
+          hasChartSequenceCompleted: true,
           tickerPricesUpdated: tickerHistoricalPrices.slice(randomStart, randomStart + totalPricePoints).map((e) => e = e['4. close']),
           tickerDatesUpdated: tickerHistoricalDates.slice(randomStart, randomStart + totalPricePoints),
-          shouldReturnComponentDisplay: true
+          shouldReturnComponentDisplay: true,
         })
-        clearInterval(chartUpdating)
       }
     }, this.state.intervalBetweenIterations)
   }
@@ -112,25 +115,22 @@ class MarketTiming extends Component {
         tradeAction: 'BUY'
       })
     }
-    console.log('buys are', this.state.buys)
-    console.log('sells are', this.state.sells)
   }
   tryAgain = () => {
     this.setState({
-            tickerInput: '',
-            tickerSubmitEnabled: false,
-            tickerHistoricalDates: [],
-            tickerHistoricalPrices: [],
-            shouldSP500Display: true,
-            selectedTickerSymbol: '',
-            tickerDatesUpdated: [],
-            tickerPricesUpdated: [],
-            tradeAction: 'BUY',
-            buys: [],
-            sells: [],
-            shouldReturnComponentDisplay: false
-    }, () => {
-      this.forceUpdate()
+      shouldSP500Display: true,
+      tickerInput: '',
+      tickerSubmitEnabled: false,
+      selectedTickerSymbol: '',
+      tickerHistoricalDates: [],
+      tickerHistoricalPrices: [],
+      tickerDatesUpdated: [],
+      tickerPricesUpdated: [],
+      tradeAction: 'BUY',
+      buys: [],
+      sells: [],
+      shouldReturnComponentDisplay: false,
+      hasChartSequenceCompleted: false,
     })
   }
   render() {
@@ -162,43 +162,48 @@ class MarketTiming extends Component {
             firstPrice={this.state.tickerHistoricalPrices[0]['4. close']}
             firstDate={this.state.tickerHistoricalDates[0]}
             lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']}
-            lastDate={this.state.tickerHistoricalDates[this.state.tickerHistoricalDates.length - 1]} 
-            tryAgain={this.tryAgain}/>
+            lastDate={this.state.tickerHistoricalDates[this.state.tickerHistoricalDates.length - 1]}
+            tryAgain={this.tryAgain} />
         }
         <div>
-          <div>
-            <p>Alright hero, pick your poison.</p>
-          </div>
-          <form
-            onSubmit={this.handleTickerSubmit}
-            id="stock-select"
-            disabled={this.state.tickerSubmitEnabled}>
-
-            <select
-              onChange={this.handleTickerChange}
-              id="commonTickerSelect">
-              <option value="" disabled selected>Choose from common Stocks</option>
-              <option value="AAPL">Apple</option>
-              <option value="MSFT">Microsoft</option>
-              <option value="AMZN">Amazon</option>
-              <option value="GOOG">Alphabet (Google)</option>
-              <option value="FB">Facebook</option>
-              <option value="JPM">JPMorgan Chase</option>
-              <option value="JNJ">Johnson & Johnson</option>
-              <option value="XOM">Exxon Mobil</option>
-            </select>
-            <p> or... </p>
-            <input
-              placeholder="Choose your own"
-              value={this.state.tickerInput}
-              onChange={this.handleTickerChange}
-            />
+          {!this.state.hasChartSequenceCompleted ?
             <div>
-              {activeTickerSuggestions}
+              <div>
+                <p>Alright hero, pick your poison.</p>
+              </div>
+              <form
+                onSubmit={this.handleTickerSubmit}
+                id="stock-select"
+                disabled={this.state.tickerSubmitEnabled}>
+
+                <select
+                  onChange={this.handleTickerChange}
+                  id="commonTickerSelect">
+                  <option value="" disabled selected>Choose from common Stocks</option>
+                  <option value="AAPL">Apple</option>
+                  <option value="MSFT">Microsoft</option>
+                  <option value="AMZN">Amazon</option>
+                  <option value="GOOG">Alphabet (Google)</option>
+                  <option value="FB">Facebook</option>
+                  <option value="JPM">JPMorgan Chase</option>
+                  <option value="JNJ">Johnson & Johnson</option>
+                  <option value="XOM">Exxon Mobil</option>
+                </select>
+                <p> or... </p>
+                <input
+                  placeholder="Choose your own"
+                  value={this.state.tickerInput}
+                  onChange={this.handleTickerChange}
+                />
+                <div>
+                  {activeTickerSuggestions}
+                </div>
+                <button type="submit">$ $ $</button>
+              </form>
+              <button onClick={this.trade}>{this.state.tradeAction}</button>
             </div>
-            <button type="submit">$ $ $</button>
-          </form>
-          <button onClick={this.trade}>{this.state.tradeAction}</button>
+            :
+            <img src={loading} />}
         </div>
       </div>
     )

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Line as LineChart } from 'react-chartjs';
 
-
 export default function Chart(props) {
   let { ticker, priceData } = props;
   const chartOptions = { //
@@ -23,12 +22,12 @@ export default function Chart(props) {
     ]
   };
   return (
-    <div>
+    <div style={{ height: '450px' }}>
       <LineChart
         data={data}
         options={chartOptions}
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width="1000px"
+        height="425px"
         redraw={false}
         className="stock-line-chart" />
     </div>

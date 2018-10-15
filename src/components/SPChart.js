@@ -23,12 +23,12 @@ export default function SPChart(props) {
     ]
   };
   return (
-    <div>
+    <div style={{ height: '450px' }}>
       <LineChart
         data={data}
         options={chartOptions}
         width="600px"
-        height="400px"
+        height="425px"
         redraw={false}
         className="spy-line-chart" />
     </div>
