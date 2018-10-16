@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+require('dotenv').config();
 const path = require('path'); // hosting
 
 const app = express();
