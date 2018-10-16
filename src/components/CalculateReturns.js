@@ -41,13 +41,23 @@ export default class CalculateReturns extends Component {
     let investor = bothReturns[1].toFixed(2);
     let response = bothReturns[0] > bothReturns[1] ? 'Yikes... That was not awesome.' : "Okay seriously, what Fund do you run?";
     return (
-      <div>
-        <p>Market Return: {`${market}%`}</p>
-        <p>Your Return: {`${investor}%`}</p>
-        <p>{response}</p>
-        <p>* Returns shown as Compound Annualized Growth Rates (CAGR).  <a href="https://www.investopedia.com/terms/c/cagr.asp" target="_blank">Learn about CAGR here</a></p>
-        <button onClick={this.props.tryAgain}>TRY AGAIN</button>
+      <div className="returns-container">
+        <button
+          onClick={this.props.tryAgain}
+          className="try-again-button">
+          TRY AGAIN
+        </button>
+        <div className="returns-inv-mkt">
+          <p>Market Return: {`${market}%`}</p>
+          <br />
+          <p>Your Return: {`${investor}%`}</p>
+          <br />
+          <p>{response}</p>
+        </div>
+        <br />
+        <br />
+        <p>* Returns are CAGR. <a href="https://www.investopedia.com/terms/c/cagr.asp" target="_blank">(Learn more)</a></p>
       </div>
-        )
-      }
+    )
+  }
 }

@@ -6,8 +6,6 @@ import SPChart from './SPChart';
 import CalculateReturns from './CalculateReturns';
 import { sp500data } from '../assets/sp500data';
 
-const loading = require('../assets/loading.svg');
-
 class MarketTiming extends Component {
   constructor() {
     super()
@@ -16,15 +14,15 @@ class MarketTiming extends Component {
       tickerInput: '',
       tickerSubmitEnabled: false,
       typingTimeout: 0,
-      suggestionDelay: 10000, // CHANGE IN PRODUCTION
+      suggestionDelay: 1000,
       tickerSuggestions: [],
       // chart data
       tickerHistoricalDates: [],
       tickerHistoricalPrices: [],
       shouldSP500Display: true,
-      intervalBetweenIterations: 50, // play around with it
-      totalPricePoints: 120,
-      pricePointsPerScreen: 15,
+      intervalBetweenIterations: 4000, // play around with it
+      totalPricePoints: 100,
+      pricePointsPerScreen: 20,
       // chart data, set on submit
       selectedTickerSymbol: '',
       tickerDatesUpdated: [],
@@ -34,7 +32,8 @@ class MarketTiming extends Component {
       buys: [],
       sells: [],
       shouldReturnComponentDisplay: false,
-      hasChartSequenceCompleted: false
+      hasChartSequenceCompleted: false,
+      hasUserInitiatedSequence: false
     }
   }
 
@@ -59,6 +58,13 @@ class MarketTiming extends Component {
     }
   }
 
+  selectSuggestion = (symbol) => {
+    this.setState({
+      tickerInput: symbol,
+      tickerSuggestions: []
+    })
+  }
+
   handleTickerSubmit = (e) => {
     e.preventDefault();
     if (!this.state.shouldReturnComponentDisplay) {
@@ -66,6 +72,8 @@ class MarketTiming extends Component {
         let tickerInfo = result.data['Meta Data'];
         let priceData = result.data['Weekly Time Series'];
         this.setState({
+          tickerSuggestions: [],
+          hasUserInitiatedSequence: true,
           tickerInput: '',
           selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
           tickerHistoricalDates: Object.keys(priceData).reverse(),
@@ -83,13 +91,13 @@ class MarketTiming extends Component {
     let randomStart = Math.floor(Math.random() * ((tickerHistoricalPrices.length - totalPricePoints) + 1));
     let count = 0;
     let chartUpdating = setInterval(() => {
-      if (count < 120) {
+      if (count < totalPricePoints) {
         count++;
         this.setState({
           tickerPricesUpdated: tickerHistoricalPrices.slice((randomStart + count), (randomStart + pricePointsPerScreen + count)).map((e) => e = e['4. close']),
           tickerDatesUpdated: tickerHistoricalDates.slice((randomStart + count), (randomStart + pricePointsPerScreen + count))
         })
-      } else if (count === 120) {
+      } else if (count === totalPricePoints) {
         clearInterval(chartUpdating)
         this.setState({
           hasChartSequenceCompleted: true,
@@ -104,19 +112,21 @@ class MarketTiming extends Component {
   trade = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (this.state.tradeAction === 'BUY') {
+    let { tradeAction, tickerPricesUpdated, buys, sells } = this.state;
+    if (tradeAction === 'BUY') {
       this.setState({
-        buys: [...this.state.buys, this.state.tickerPricesUpdated.pop()],
+        buys: [...buys, tickerPricesUpdated.pop()],
         tradeAction: 'SELL'
       })
     } else {
       this.setState({
-        sells: [...this.state.sells, this.state.tickerPricesUpdated.pop()],
+        sells: [...sells, tickerPricesUpdated.pop()],
         tradeAction: 'BUY'
       })
     }
   }
-  tryAgain = () => {
+
+  tryAgain = () => { // resets all values to initial
     this.setState({
       shouldSP500Display: true,
       tickerInput: '',
@@ -131,17 +141,32 @@ class MarketTiming extends Component {
       sells: [],
       shouldReturnComponentDisplay: false,
       hasChartSequenceCompleted: false,
+      hasUserInitiatedSequence: false,
     })
   }
+
   render() {
     let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ? this.state.tickerSuggestions
       .map((e, i) => {
         return <p
           key={i}
-        >{`${e['1. symbol']}:  ${e['2. name']}, Type: ${e['3. type']}`}</p>
+          onClick={(symbol) => this.selectSuggestion(e['1. symbol'])}
+        >{`${e['1. symbol']}: ${e['2. name']}`}</p>
       }) : null
+
     return (
       <div>
+        {this.state.shouldReturnComponentDisplay &&
+          <CalculateReturns
+            buys={this.state.buys}
+            sells={this.state.sells}
+            firstPrice={this.state.tickerHistoricalPrices[0]['4. close']}
+            firstDate={this.state.tickerHistoricalDates[0]}
+            lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']}
+            lastDate={this.state.tickerHistoricalDates[this.state.tickerHistoricalDates.length - 1]}
+            tryAgain={this.tryAgain} />
+        }
+
         {this.state.shouldSP500Display ?
           <SPChart
             priceData={Object.values(sp500data['Weekly Time Series']).reverse().map((e) => e = e['4. close'])}
@@ -153,57 +178,60 @@ class MarketTiming extends Component {
             priceData={this.state.tickerPricesUpdated}
             dateData={this.state.tickerDatesUpdated}
             ticker={this.state.selectedTickerSymbol}
-            priceDataLength={this.state.tickerHistoricalDates.length} />
+            priceDataLength={this.state.tickerHistoricalDates.length}
+            running={!this.state.hasChartSequenceCompleted} />
         }
-        {this.state.shouldReturnComponentDisplay &&
-          <CalculateReturns
-            buys={this.state.buys}
-            sells={this.state.sells}
-            firstPrice={this.state.tickerHistoricalPrices[0]['4. close']}
-            firstDate={this.state.tickerHistoricalDates[0]}
-            lastPrice={this.state.tickerHistoricalPrices[this.state.tickerHistoricalPrices.length - 1]['4. close']}
-            lastDate={this.state.tickerHistoricalDates[this.state.tickerHistoricalDates.length - 1]}
-            tryAgain={this.tryAgain} />
-        }
-        <div>
-          {!this.state.hasChartSequenceCompleted ?
-            <div>
-              <div>
-                <p>Alright hero, pick your poison.</p>
-              </div>
-              <form
-                onSubmit={this.handleTickerSubmit}
-                id="stock-select"
-                disabled={this.state.tickerSubmitEnabled}>
 
-                <select
-                  onChange={this.handleTickerChange}
-                  id="commonTickerSelect">
-                  <option value="" disabled selected>Choose from common Stocks</option>
-                  <option value="AAPL">Apple</option>
-                  <option value="MSFT">Microsoft</option>
-                  <option value="AMZN">Amazon</option>
-                  <option value="GOOG">Alphabet (Google)</option>
-                  <option value="FB">Facebook</option>
-                  <option value="JPM">JPMorgan Chase</option>
-                  <option value="JNJ">Johnson & Johnson</option>
-                  <option value="XOM">Exxon Mobil</option>
-                </select>
-                <p> or... </p>
-                <input
-                  placeholder="Choose your own"
-                  value={this.state.tickerInput}
-                  onChange={this.handleTickerChange}
-                />
-                <div>
-                  {activeTickerSuggestions}
-                </div>
-                <button type="submit">$ $ $</button>
-              </form>
-              <button onClick={this.trade}>{this.state.tradeAction}</button>
+        <div>
+          <div className="select-div">
+            <div id="lets-go" className="stock-select-poison">
+              <p>Alright hero, pick your poison.</p>
             </div>
-            :
-            <img src={loading} />}
+
+            <form
+              onSubmit={this.handleTickerSubmit}
+              id="stock-select"
+              disabled={this.state.tickerSubmitEnabled}
+              className="stock-select-outer">
+              <select
+                onChange={this.handleTickerChange}
+                id="commonTickerSelect">
+                <option value="" disabled selected>Choose from common Stocks</option>
+                <option value="AAPL">Apple</option>
+                <option value="MSFT">Microsoft</option>
+                <option value="AMZN">Amazon</option>
+                <option value="GOOG">Alphabet (Google)</option>
+                <option value="FB">Facebook</option>
+                <option value="JPM">JPMorgan Chase</option>
+                <option value="JNJ">Johnson & Johnson</option>
+                <option value="XOM">Exxon Mobil</option>
+              </select>
+              <input
+                placeholder="Choose your own"
+                value={this.state.tickerInput}
+                onChange={this.handleTickerChange}
+              />
+              <div className="suggestions">
+              {activeTickerSuggestions}
+              </div>
+            </form>
+
+            <button
+              type="submit"
+              form="stock-select"
+              style={{ display: `${this.state.hasUserInitiatedSequence ? 'none' : 'block'}` }}
+              disabled={!this.state.tickerInput}
+              className="stock-action-button">
+              GO
+            </button>
+
+            <button
+              onClick={this.trade}
+              style={{ display: `${!this.state.hasUserInitiatedSequence ? 'none' : 'block'}` }}
+              className="stock-action-button">
+              {this.state.tradeAction}
+            </button>
+          </div>
         </div>
       </div>
     )
