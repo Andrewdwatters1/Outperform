@@ -1,10 +1,9 @@
 import React from 'react';
 import { Line as LineChart } from 'react-chartjs';
 
-
 export default function SPChart(props) {
   let { ticker, priceData, dateData } = props;
-  const chartOptions = { //
+  const chartOptions = {
     showScale: false,
     tooltipEvents: []
   }
@@ -25,7 +24,7 @@ export default function SPChart(props) {
   };
   return (
     <div
-      style={{
+      style={{ // must be inline
         height: `${window.innerHeight * .8}px`,
         width: `${window.innerWidth}px`,
         margin: '0 auto',
@@ -34,7 +33,7 @@ export default function SPChart(props) {
       }}>
 
       <div
-        style={{
+        style={{ // must be inline
           height: `${window.innerHeight * .8}px`,
           width: `${window.innerWidth}px`,
           margin: '0 auto'

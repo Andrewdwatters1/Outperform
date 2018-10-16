@@ -14,13 +14,14 @@ class MarketTiming extends Component {
       tickerInput: '',
       tickerSubmitEnabled: false,
       typingTimeout: 0,
-      suggestionDelay: 1000,
+      suggestionDelay: 250,
+      clearTickerSuggestionsAfter: 3000,
       tickerSuggestions: [],
       // chart data
       tickerHistoricalDates: [],
       tickerHistoricalPrices: [],
       shouldSP500Display: true,
-      intervalBetweenIterations: 4000, // play around with it
+      intervalBetweenIterations: 300, // play around with this
       totalPricePoints: 100,
       pricePointsPerScreen: 20,
       // chart data, set on submit
@@ -40,6 +41,11 @@ class MarketTiming extends Component {
   handleTickerChange = e => {
     const { suggestionDelay } = this.state;
     const { value } = e.target;
+    if (value === '') {
+      this.setState({
+        tickerSuggestions: []
+      })
+    }
     if (this.state.typingTimeout) clearTimeout(this.state.typingTimeout)
     this.setState({
       tickerInput: value,
@@ -50,11 +56,18 @@ class MarketTiming extends Component {
 
   getTickerSuggestions = () => {
     if (this.state.tickerInput.length) {
-      axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
-        this.setState({
-          tickerSuggestions: result.data.bestMatches
+      axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
+        .then(result => {
+          this.setState({
+            tickerSuggestions: result.data.bestMatches
+          }, () => {
+            setTimeout(() => {
+              this.setState({
+                tickerSuggestions: []
+              })
+            }, this.state.clearTickerSuggestionsAfter)
+          })
         })
-      })
     }
   }
 
@@ -68,21 +81,22 @@ class MarketTiming extends Component {
   handleTickerSubmit = (e) => {
     e.preventDefault();
     if (!this.state.shouldReturnComponentDisplay) {
-      axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`).then(result => {
-        let tickerInfo = result.data['Meta Data'];
-        let priceData = result.data['Weekly Time Series'];
-        this.setState({
-          tickerSuggestions: [],
-          hasUserInitiatedSequence: true,
-          tickerInput: '',
-          selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
-          tickerHistoricalDates: Object.keys(priceData).reverse(),
-          tickerHistoricalPrices: Object.values(priceData).reverse(),
-          shouldSP500Display: false,
-        }, () => {
-          this.updateChartData()
+      axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
+        .then(result => {
+          let tickerInfo = result.data['Meta Data'];
+          let priceData = result.data['Weekly Time Series'];
+          this.setState({
+            tickerSuggestions: [],
+            hasUserInitiatedSequence: true,
+            tickerInput: '',
+            selectedTickerSymbol: tickerInfo['2. Symbol'].toUpperCase(),
+            tickerHistoricalDates: Object.keys(priceData).reverse(),
+            tickerHistoricalPrices: Object.values(priceData).reverse(),
+            shouldSP500Display: false,
+          }, () => {
+            this.updateChartData()
+          })
         })
-      })
     }
   }
 
@@ -94,16 +108,28 @@ class MarketTiming extends Component {
       if (count < totalPricePoints) {
         count++;
         this.setState({
-          tickerPricesUpdated: tickerHistoricalPrices.slice((randomStart + count), (randomStart + pricePointsPerScreen + count)).map((e) => e = e['4. close']),
-          tickerDatesUpdated: tickerHistoricalDates.slice((randomStart + count), (randomStart + pricePointsPerScreen + count))
+          tickerPricesUpdated: tickerHistoricalPrices
+            .slice((randomStart + count), (randomStart + pricePointsPerScreen + count))
+            .map((e) => e = e['4. close']),
+
+          tickerDatesUpdated: tickerHistoricalDates
+            .slice((randomStart + count), (randomStart + pricePointsPerScreen + count)),
+
+          tickerSuggestions: [],
         })
       } else if (count === totalPricePoints) {
         clearInterval(chartUpdating)
         this.setState({
           hasChartSequenceCompleted: true,
-          tickerPricesUpdated: tickerHistoricalPrices.slice(randomStart, randomStart + totalPricePoints).map((e) => e = e['4. close']),
-          tickerDatesUpdated: tickerHistoricalDates.slice(randomStart, randomStart + totalPricePoints),
+          tickerPricesUpdated: tickerHistoricalPrices
+            .slice(randomStart, randomStart + totalPricePoints)
+            .map((e) => e = e['4. close']),
+
+          tickerDatesUpdated: tickerHistoricalDates
+            .slice(randomStart, randomStart + totalPricePoints),
+
           shouldReturnComponentDisplay: true,
+          tickerSuggestions: []
         })
       }
     }, this.state.intervalBetweenIterations)
@@ -146,13 +172,14 @@ class MarketTiming extends Component {
   }
 
   render() {
-    let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ? this.state.tickerSuggestions
-      .map((e, i) => {
-        return <p
-          key={i}
-          onClick={(symbol) => this.selectSuggestion(e['1. symbol'])}
-        >{`${e['1. symbol']}: ${e['2. name']}`}</p>
-      }) : null
+    let activeTickerSuggestions = this.state.tickerSuggestions && this.state.tickerSuggestions.length ?
+      this.state.tickerSuggestions
+        .map((e, i) => {
+          return <p
+            key={i}
+            onClick={(symbol) => this.selectSuggestion(e['1. symbol'])}
+          >{`${e['1. symbol']}: ${e['2. name']}`}</p>
+        }) : null
 
     return (
       <div>
@@ -212,7 +239,7 @@ class MarketTiming extends Component {
                 onChange={this.handleTickerChange}
               />
               <div className="suggestions">
-              {activeTickerSuggestions}
+                {activeTickerSuggestions}
               </div>
             </form>
 

@@ -3,7 +3,7 @@ import { Line as LineChart } from 'react-chartjs';
 
 export default function Chart(props) {
   let { ticker, priceData } = props;
-  const chartOptions = { //
+  const chartOptions = {
     showScale: false,
     tooltipEvents: []
   }
@@ -25,16 +25,17 @@ export default function Chart(props) {
   return (
     props.running ?
       <div
-        style={{
+        style={{ // must be inline
           height: `${window.innerHeight * .8}px`,
           width: `${window.innerWidth}px`,
           margin: '0 auto',
           backgroundColor: 'transparent',
           zIndex: 5
         }}>
+        <p className="recommendation">Buy Low, Sell High! </p>
 
         <div
-          style={{
+          style={{ // must be inline
             height: `${window.innerHeight * .8}px`,
             width: `${window.innerWidth}px`,
             margin: '0 auto'
@@ -47,28 +48,11 @@ export default function Chart(props) {
             height={window.innerHeight * .8}
             redraw={false}
             className="stock-line-chart-active" />
-          <div
-            style={{
-              height: `${window.innerHeight * .8}px`,
-              width: '10vw',
-              position: 'absolute',
-              right: '0',
-              bottom: '0',
-              display: 'flex',
-              flexDirection: 'column',
-              top: '120vh',
-              justifyContent: 'space-between'
-            }}>
-            <i class="fas fa-arrow-left" style={{fontSize: '2.5em'}}></i>
-            <i class="fas fa-arrow-left" style={{fontSize: '2.5em'}}></i>
-            <i class="fas fa-arrow-left" style={{fontSize: '2.5em'}}></i>
-            <i class="fas fa-arrow-left" style={{fontSize: '2.5em'}}></i>
-          </div>
         </div>
       </div>
       :
       <div
-        style={{
+        style={{// must be inline
           height: `${window.innerHeight * .8}px`,
           width: `${window.innerWidth}px`,
           margin: '0 auto',
@@ -77,7 +61,7 @@ export default function Chart(props) {
         }}>
 
         <div
-          style={{
+          style={{// must be inline
             height: `${window.innerHeight * .8}px`,
             width: `${window.innerWidth}px`,
             margin: '0 auto'

@@ -7,7 +7,6 @@ export default class CalculateReturns extends Component {
   }
 
   calcReturns = () => {
-    // setup
     let returns = [];
     let { firstDate, lastDate, firstPrice, lastPrice, buys, sells } = this.props;
 
@@ -39,7 +38,10 @@ export default class CalculateReturns extends Component {
     let bothReturns = this.calcReturns();
     let market = bothReturns[0].toFixed(2);
     let investor = bothReturns[1].toFixed(2);
-    let response = bothReturns[0] > bothReturns[1] ? 'Yikes... That was not awesome.' : "Okay seriously, what Fund do you run?";
+    let response = bothReturns[0] > bothReturns[1] ?
+      'Yikes... That was not awesome.'
+      :
+      "Shouldn't you be running a Hedge Fund right now...?";
     return (
       <div className="returns-container">
         <button

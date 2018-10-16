@@ -17,7 +17,7 @@ export default function Header() {
         <hr />
         <p>I know, you're thinking: "This guy is a shmuck, I can pull if off!" Fair enough, let's see... </p>
         <hr />
-        <p style={{ fontSize: '1.2em', width: '98%', margin: '0 auto' }}>Pick a stock from the list below, or enter your own.  Then click "invest" and the chart will start to track the stock's history, from a random date in the past.  Your job is simple: click the "BUY/SELL" button at the right time(s).  More often than not, you'll struggle to achieve or beat the market performance but maybe... just maybe.. you can achieve the ever-illusive <a href="https://www.investopedia.com/terms/a/alpha.asp" target="_blank">Alpha</a> and Outperform.</p>
+        <p style={{ fontSize: '1.2em', width: '98%', margin: '0 auto' }}>Pick a stock from the list below, or enter your own.  Then click "invest" and the chart will start from a random date sometime in the last 20 years.  Your job is simple: click the "BUY/SELL" button at the right time(s).  Chances are you'll struggle to beat the market but maybe... just maybe... you can achieve the ever-illusive <a href="https://www.investopedia.com/terms/a/alpha.asp" target="_blank">Alpha</a> and Outperform.</p>
       </div>
       <button className="app-header-button"><AnchorLink className="app-header-button-link" offset='39' href='#lets-go'>LETS GO!</AnchorLink></button>
     </header>
