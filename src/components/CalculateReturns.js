@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
 import * as moment from 'moment';
+import Sound from 'react-sound'
+
+import boo from '../audio/boo.wav';
+import money from '../audio/money.wav';
 
 export default class CalculateReturns extends Component {
   constructor(props) {
     super(props)
   }
+
 
   calcReturns = () => {
     let returns = [];
@@ -24,9 +29,9 @@ export default class CalculateReturns extends Component {
     let investorValueChangeAsBase = 1; // start w/ 0% return
     for (let i = 0; i < buys.length; i++) {
       if (sells[i]) { // if sold prior to end of sequence
-        investorValueChangeAsBase *= (sells[i] / buys[i])
+        investorValueChangeAsBase *= (sells[i] / buys[i]) || 1
       } else {
-        investorValueChangeAsBase *= (lastPrice / buys[i])
+        investorValueChangeAsBase *= (lastPrice / buys[i]) || 1
       }
     }
     let investorCAGR = (Math.pow(investorValueChangeAsBase, logOfYearsAsExp) - 1) * 100;
@@ -42,6 +47,10 @@ export default class CalculateReturns extends Component {
       'Yikes... That was not awesome.'
       :
       "Shouldn't you be running a Hedge Fund right now...?";
+    let audio = bothReturns[0] > bothReturns[1] ?
+      <Sound url={boo} playStatus={Sound.status.PLAYING} />
+      :
+      <Sound url={money} playStatus={Sound.status.PLAYING} />
     return (
       <div className="returns-container">
         <button
@@ -55,6 +64,7 @@ export default class CalculateReturns extends Component {
           <p>Your Return: {`${investor}%`}</p>
           <br />
           <p>{response}</p>
+          {audio}
         </div>
         <br />
         <br />

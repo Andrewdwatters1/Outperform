@@ -16,6 +16,7 @@ class MarketTiming extends Component {
       typingTimeout: 0,
       suggestionDelay: 250,
       clearTickerSuggestionsAfter: 3000,
+      customTickerInput: false,
       tickerSuggestions: [],
       // chart data
       tickerHistoricalDates: [],
@@ -54,8 +55,14 @@ class MarketTiming extends Component {
     })
   }
 
+  triggerTickerSuggestions = () => {
+    this.setState({
+      customTickerInput: !this.state.customTickerInput
+    })
+  }
+
   getTickerSuggestions = () => {
-    if (this.state.tickerInput.length) {
+    if (this.state.tickerInput.length && this.state.customTickerInput) {
       axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
         .then(result => {
           this.setState({
@@ -180,7 +187,6 @@ class MarketTiming extends Component {
             onClick={(symbol) => this.selectSuggestion(e['1. symbol'])}
           >{`${e['1. symbol']}: ${e['2. name']}`}</p>
         }) : null
-
     return (
       <div>
         {this.state.shouldReturnComponentDisplay &&
@@ -237,6 +243,8 @@ class MarketTiming extends Component {
                 placeholder="Choose your own"
                 value={this.state.tickerInput}
                 onChange={this.handleTickerChange}
+                onFocus={this.triggerTickerSuggestions}
+                onBlur={this.triggerTickerSuggestions}
               />
               <div className="suggestions">
                 {activeTickerSuggestions}

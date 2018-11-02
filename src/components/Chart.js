@@ -2,13 +2,13 @@ import React from 'react';
 import { Line as LineChart } from 'react-chartjs';
 
 export default function Chart(props) {
-  let { ticker, priceData } = props;
+  let { ticker, priceData, dateData } = props;
   const chartOptions = {
     showScale: false,
     tooltipEvents: []
   }
   const data = {
-    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    labels: dateData,
     datasets: [
       {
         label: `Historical prices: ${ticker}`,
@@ -22,6 +22,7 @@ export default function Chart(props) {
       },
     ]
   };
+  console.log(props.priceData)
   return (
     props.running ?
       <div
