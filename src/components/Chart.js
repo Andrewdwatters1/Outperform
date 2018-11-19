@@ -2,11 +2,14 @@ import React from 'react';
 import { Line as LineChart } from 'react-chartjs';
 
 export default function Chart(props) {
-  let { ticker, priceData, dateData } = props;
+  let { ticker, priceData, dateData, windowLoadWidth } = props;
+  const mobile = windowLoadWidth > 500 ? false : true;
+
   const chartOptions = {
     showScale: false,
     tooltipEvents: []
   }
+
   const data = {
     labels: dateData,
     datasets: [
@@ -22,60 +25,23 @@ export default function Chart(props) {
       },
     ]
   };
-  console.log(props.priceData)
+
   return (
     props.running ?
-      <div
-        style={{ // must be inline
-          height: `${window.innerHeight * .8}px`,
-          width: `${window.innerWidth}px`,
-          margin: '0 auto',
-          backgroundColor: 'transparent',
-          zIndex: 5
-        }}>
-        <p className="recommendation">Buy Low, Sell High! </p>
-
-        <div
-          style={{ // must be inline
-            height: `${window.innerHeight * .8}px`,
-            width: `${window.innerWidth}px`,
-            margin: '0 auto'
-          }}>
-
-          <LineChart
-            data={data}
-            options={chartOptions}
-            width={window.innerWidth * .5}
-            height={window.innerHeight * .8}
-            redraw={false}
-            className="stock-line-chart-active" />
-        </div>
-      </div>
+      <LineChart
+        data={data}
+        options={chartOptions}
+        width={mobile ? windowLoadWidth * .60 : windowLoadWidth * .80}
+        height={mobile ? windowLoadWidth * .70 : windowLoadWidth * .39}
+        redraw={false}
+        className="stock-line-chart-active" />
       :
-      <div
-        style={{// must be inline
-          height: `${window.innerHeight * .8}px`,
-          width: `${window.innerWidth}px`,
-          margin: '0 auto',
-          backgroundColor: 'transparent',
-          zIndex: 5
-        }}>
-
-        <div
-          style={{// must be inline
-            height: `${window.innerHeight * .8}px`,
-            width: `${window.innerWidth}px`,
-            margin: '0 auto'
-          }}>
-
-          <LineChart
-            data={data}
-            options={chartOptions}
-            width={window.innerWidth * .8}
-            height={window.innerHeight * .7}
-            redraw={false}
-            className="stock-line-chart-final" />
-        </div>
-      </div>
+      <LineChart
+        data={data}
+        options={chartOptions}
+        width={mobile ? windowLoadWidth * .60 : windowLoadWidth * .80}
+        height={mobile ? windowLoadWidth * .70 : windowLoadWidth * .39}
+        redraw={false}
+        className="stock-line-chart-final" />
   )
 }
