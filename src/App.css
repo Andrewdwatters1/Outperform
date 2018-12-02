@@ -94,6 +94,9 @@ table {
   width: 90%;
   margin: 0 auto 70px auto;
 }
+.app-header-content > a:hover {
+  cursor: pointer;
+}
 .app-header-button {
   width: 180px;
   height: 50px;

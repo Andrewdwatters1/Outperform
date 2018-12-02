@@ -14,7 +14,7 @@ class MarketTiming extends Component {
       tickerInput: '',
       tickerSubmitEnabled: false,
       typingTimeout: 0,
-      suggestionDelay: 300,
+      suggestionDelay: 180,
       clearTickerSuggestionsAfter: 4000,
       customTickerInput: false,
       tickerSuggestions: [],
@@ -68,8 +68,9 @@ class MarketTiming extends Component {
   }
 
   getTickerSuggestions = () => {
-    if (this.state.tickerInput.length && this.state.customTickerInput) {
-      axios.get(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
+    const { tickerInput } = this.state;
+    if (tickerInput.length && this.state.customTickerInput) {
+      axios.post('/api/getSuggestions', { tickerInput })
         .then(result => {
           this.setState({
             tickerSuggestions: result.data.bestMatches
@@ -93,9 +94,9 @@ class MarketTiming extends Component {
 
   handleTickerSubmit = (e) => {
     e.preventDefault();
-
+    const { tickerInput } = this.state;
     if (!this.state.shouldReturnComponentDisplay) {
-      axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${this.state.tickerInput}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
+      axios.post('/api/submitTicker', { tickerInput })
         .then(result => {
           let tickerInfo = result.data['Meta Data'];
           let priceData = result.data['Weekly Time Series'];
@@ -234,7 +235,7 @@ class MarketTiming extends Component {
 
 
         <div>
-          
+
           <form
             onSubmit={this.handleTickerSubmit}
             id="stock-select"
@@ -244,7 +245,7 @@ class MarketTiming extends Component {
             <select
               onChange={this.handleTickerChange}
               id="commonTickerSelect">
-              <option value="" disabled selected>Common Stocks</option>
+              <option value="" disabled defaultValue>Common Stocks</option>
               <option value="AAPL">Apple</option>
               <option value="MSFT">Microsoft</option>
               <option value="AMZN">Amazon</option>

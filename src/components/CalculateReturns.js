@@ -59,13 +59,13 @@ export default class CalculateReturns extends Component {
       <div className="returns-container">
 
         <p>{response}</p>
-        <br/>
+        <br />
         <p>Market Return: {`${market}%`}</p>
         <p>Your Return: {`${investor}%`}</p>
-        <br/> 
+        <br />
 
-        <p>* Returns as CAGR. <a href="https://www.investopedia.com/terms/c/cagr.asp" target="_blank">(Learn more)</a></p>
-        <br/> 
+        <p>* Returns as CAGR. <a href="https://www.investopedia.com/terms/c/cagr.asp" target="_blank" rel="noopener noreferrer">(Learn more)</a></p>
+        <br />
         <button
           onClick={this.props.tryAgain}
           className="buttons-all try-again-button">
